@@ -12,6 +12,7 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*"],
+  "exclude": ["src/cli.ts", "src/tester.ts", "src/test_fsm.ts"],
   "ts-node": {
     "esm": false
   }
