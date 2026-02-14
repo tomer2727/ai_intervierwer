@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interviewer | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Interviewer Dashboard</h1>
+            <p>Real-time technical interview monitoring</p>
+            <div id="currentStateLabel" style="font-weight: 700; color: #0070f3; margin-top: 10px; font-size: 1.2rem;">Stage: Awaiting Data...</div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Left Side: Control & Feed -->
+            <div class="left-col">
+                <div class="card setup-card">
+                    <form id="callForm">
+                        <div class="input-group">
+                            <label for="to">Candidate Phone Number</label>
+                            <input type="tel" id="to" name="to" value="+972525320099" placeholder="+1 555 000 0000" required>
+                        </div>
+                        <button type="submit" id="submitBtn">Start Interview Call</button>
+                    </form>
+                    <div id="statusMessage" class="status hidden"></div>
+                </div>
+
+                <div class="card dashboard hidden" id="liveDashboard">
+                    <div class="state-tracker" id="stateTracker">
+                        <div class="state-item" data-state="WELCOME">WELCOME</div>
+                        <div class="state-item" data-state="SCREENING">SCREENING</div>
+                        <div class="state-item" data-state="TECHNICAL_Q1">TECH Q1</div>
+                        <div class="state-item" data-state="DEEP_DIVE">DEEP DIVE</div>
+                        <div class="state-item" data-state="JOB_PITCH">JOB PITCH</div>
+                        <div class="state-item" data-state="FEEDBACK">FEEDBACK</div>
+                    </div>
+                    
+                    <div class="feed-container" id="transcriptFeed">
+                        <!-- Messages arrive here -->
+                        <div class="message user">System: Waiting for connection...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Brain Context -->
+            <div class="right-col">
+                <div class="card">
+                    <h3 class="panel-title">Senior Critique</h3>
+                    <div class="prompt-box" id="critiqueBox" style="color: #0070f3; font-weight: bold;">Waiting for first answer...</div>
+                </div>
+
+                <div class="card">
+                    <h3 class="panel-title">Active System Prompt (Junior)</h3>
+                    <div class="prompt-box" id="promptBox">Awaiting session...</div>
+                </div>
+
+                <div class="card">
+                    <h3 class="panel-title">Supervisor History (Senior)</h3>
+                    <div class="prompt-box" id="seniorInstructionBox">None yet.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('callForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const liveDashboard = document.getElementById('liveDashboard');
+        const transcriptFeed = document.getElementById('transcriptFeed');
+        const promptBox = document.getElementById('promptBox');
+        const seniorBox = document.getElementById('seniorInstructionBox');
+        const critiqueBox = document.getElementById('critiqueBox');
+        const stateLabel = document.getElementById('currentStateLabel');
+        const stateItems = document.querySelectorAll('.state-item');
+
+        // Connect to UI event stream
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ui-stream`);
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.event === 'state_update') {
+                updateDashboard(data);
+            }
+        };
+
+        function updateDashboard(data) {
+            liveDashboard.classList.remove('hidden');
+            
+            // Update States
+            stateLabel.textContent = `Stage: ${data.state}`;
+            stateItems.forEach(item => {
+                const state = item.getAttribute('data-state');
+                item.classList.remove('active', 'completed');
+                if (state === data.state) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Update Prompt
+            promptBox.textContent = data.instructions;
+
+            // Update Critique
+            if (data.critique) {
+                critiqueBox.textContent = data.critique;
+            }
+
+            // Update Senior Instructions
+            seniorBox.innerHTML = data.seniorInstructions.map(instr => `<div>• ${instr}</div>`).join('') || 'None yet.';
+
+            // Update Transcript
+            transcriptFeed.innerHTML = '';
+            data.transcript.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message ${msg.role}`;
+                div.textContent = msg.text;
+                transcriptFeed.appendChild(div);
+            });
+            transcriptFeed.scrollTop = transcriptFeed.scrollHeight;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const to = document.getElementById('to').value;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Calling...';
+
+            try {
+                const response = await fetch('/make-call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    statusMessage.textContent = 'Call initiated!';
+                    statusMessage.className = 'status success';
+                } else {
+                    statusMessage.textContent = `Error: ${data.error}`;
+                    statusMessage.className = 'status error';
+                }
+            } catch (err) {
+                statusMessage.textContent = 'Server error.';
+                statusMessage.className = 'status error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Interview Call';
+                statusMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

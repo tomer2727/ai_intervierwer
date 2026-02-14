@@ -3,20 +3,30 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "start:cli": "ts-node src/cli.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fastify/formbody": "^8.0.2",
+    "@fastify/static": "^9.0.0",
     "@fastify/websocket": "^11.2.0",
     "@types/node": "^25.2.3",
+    "@types/ws": "^8.18.1",
+    "alawmulaw": "^6.0.0",
     "dotenv": "^17.3.1",
     "fastify": "^5.7.4",
+    "form-data": "^4.0.5",
     "openai": "^6.22.0",
     "ts-node": "^10.9.2",
+    "twilio": "^5.12.1",
     "typescript": "^5.9.3",
+    "wavefile": "^11.0.0",
     "ws": "^8.19.0",
     "xstate": "^5.28.0"
   }

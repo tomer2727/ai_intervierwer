@@ -4,8 +4,11 @@ export interface Message {
 }
 
 export interface AgentContext {
-  conversationHistory: Message[];
-  seniorInstructions: string[]; // Instructions from Senior to Junior
+  currentState: string;
+  conversationHistory: { role: string; text: string }[];
+  seniorInstructions: string[];
+  targetStageTemplate?: string;
+  fullStageMap?: Record<string, string>;
 }
 
 export interface JuniorResponse {

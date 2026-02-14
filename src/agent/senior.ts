@@ -1,48 +1,63 @@
 import { OpenAI } from 'openai';
 import { AgentContext, SeniorAnalysis } from './types';
 
-const openai = new OpenAI(); // Would likely use a stronger model (GPT-4) in production
+const SENIOR_SYSTEM_PROMPT = `
+You are an expert Senior Engineering Manager and Hiring Architect.
+You are the "Brain" behind an AI Interviewer called Wandy.
 
-const SENIOR_SYSTEM_PROMPT = `You are an expert Senior Engineer and Hiring Manager.
-You are silently observing an interview conducted by a Junior Recruiter.
-Your job is to:
-1. Analyze the candidate's answers for technical depth and accuracy.
-2. Provide specific instructions to the Junior Recruiter on what to ask next.
-3. Decide if we have enough signal to move to the next interview stage.
+Your job is NOT just to analyze, but to CUSTOMIZE the Junior's system prompt.
 
-Output JSON format:
+TASKS:
+1. TRANSITION CONSULTANT: You are called ONLY when Wandy (Junior) believes a stage is complete via the "request_next_stage" tool.
+2. STAGE SUMMARIZATION: Analyze the transcript of the stage just completed. Create a concise summary (e.g., "The candidate explained their RAG architecture well, focusing on vector sync.").
+3. DECISIVE TRANSITIONS: Always suggest the NEXT_STAGE in the sequence (check All Interview Stages map).
+4. THE BRIDGING PROMPT: Your "instruction" output MUST be the full system prompt for the NEXT stage, but it MUST start with Wandy's "Bridge":
+   - Acknowledge the summary of the previous stage.
+   - Close the subject ("That's a solid explanation of X.").
+   - Pivot to the next goal ("Now, I'd love to hear about...").
+5. GOAL MASTERY: Ensure the instructions for the next stage are clear and prune any irrelevant old goals.
+
+CONVERSATIONAL RHYTHM:
+- Wandy should feel like she's in a conversation. If the user only says "All right", it means they are about to speak. Do not interrupt them with a new prompt.
+
+OUTPUT FORMAT (JSON):
 {
-  "feedback": "Internal critique of the candidate's answer",
-  "instruction": "What the Junior should say/ask next",
+  "feedback": "Internal technical critique for the logs",
+  "instruction": "The EXACT string that will become the Junior's System Prompt. Include all template text with placeholders replaced.",
   "suggestedState": "NEXT_STAGE" | "CONTINUE" | "TERMINATE"
 }
 `;
 
 export class SeniorAgent {
+  private openai: OpenAI;
+
+  constructor(apiKey: string) {
+    this.openai = new OpenAI({ apiKey });
+  }
+
   async analyze(context: AgentContext): Promise<SeniorAnalysis> {
     const messages: any[] = [
       { role: 'system', content: SENIOR_SYSTEM_PROMPT },
-      { role: 'user', content: `Current Conversation History:\n${JSON.stringify(context.conversationHistory)}` }
+      { 
+        role: 'user', 
+        content: `
+          Current State: ${context.currentState}
+          Target Stage Template: ${context.targetStageTemplate || 'N/A'}
+          All Interview Stages:
+          ${JSON.stringify(context.fullStageMap, null, 2)}
+          
+          Conversation History:
+          ${JSON.stringify(context.conversationHistory)}
+        ` 
+      }
     ];
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o', // Higher intelligence model
-      messages: messages,
-      response_format: { type: "json_object" },
-      temperature: 0.2, // Be objective
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages,
+      response_format: { type: 'json_object' }
     });
 
-    try {
-      const content = response.choices[0]?.message?.content;
-      if (!content) throw new Error("No content from Senior Agent");
-      return JSON.parse(content) as SeniorAnalysis;
-    } catch (e) {
-      console.error("Failed to parse Senior Agent response", e);
-      return {
-        feedback: "Error parsing analysis",
-        instruction: null,
-        suggestedState: "CONTINUE"
-      };
-    }
+    return JSON.parse(response.choices[0].message.content || '{}');
   }
 }
