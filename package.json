@@ -1,0 +1,23 @@
+{
+  "name": "ai_interviewer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/websocket": "^11.2.0",
+    "@types/node": "^25.2.3",
+    "dotenv": "^17.3.1",
+    "fastify": "^5.7.4",
+    "openai": "^6.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "ws": "^8.19.0",
+    "xstate": "^5.28.0"
+  }
+}
