@@ -14,5 +14,6 @@ RUN npm install --production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 
-EXPOSE 3000
-CMD ["npm", "start"]
+# Use node directly for better signal handling and reliability
+# Railway provides the PORT environment variable automatically
+CMD ["node", "dist/index.js"]

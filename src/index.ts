@@ -28,6 +28,16 @@ const PORT = process.env.PORT || 3000;
 // Track active sessions for UI updates
 const activeSessions = new Map<string, any>();
 
+// Health check endpoint for Railway
+fastify.get('/health', async () => {
+  return { status: 'ok', timestamp: new Date().toISOString() };
+});
+
+// Root endpoint to verify server is alive
+fastify.get('/', async (request, reply) => {
+  return reply.sendFile('index.html');
+});
+
 fastify.register(async (fastify) => {
   // 1. TwiML Endpoint - Twilio calls this when a call comes in
   fastify.all('/incoming-call', async (request, reply) => {
@@ -235,10 +245,11 @@ const broadcastToUI = (data: any) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`[Startup] Attempting to listen on port ${PORT} (host: 0.0.0.0)...`);
+    const address = await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });
+    console.log(`[Startup] Server successfully listening at ${address}`);
   } catch (err) {
-    fastify.log.error(err);
+    console.error(`[Startup] Failed to start server:`, err);
     process.exit(1);
   }
 };
