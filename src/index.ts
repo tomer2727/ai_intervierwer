@@ -25,7 +25,10 @@ fastify.register(fastifyStatic, {
 const seniorAgent = new SeniorAgent(process.env.OPENAI_API_KEY!);
 const PORT = process.env.PORT || 3000;
 
-// Track active sessions for UI updates
+console.log(`[Config] Detected PORT from environment: ${process.env.PORT}`);
+console.log(`[Config] Using PORT: ${PORT}`);
+console.log(`[Config] PUBLIC_URL: ${process.env.PUBLIC_URL}`);
+
 const activeSessions = new Map<string, any>();
 
 // Health check endpoint for Railway
