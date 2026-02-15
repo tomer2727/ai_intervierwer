@@ -1,8 +1,6 @@
 import Fastify from 'fastify';
 import WebSocket from '@fastify/websocket';
 import formBody from '@fastify/formbody';
-import fastifyStatic from '@fastify/static';
-import path from 'path';
 import dotenv from 'dotenv';
 import { interviewMachine } from './fsm/machine';
 import { createActor } from 'xstate';
@@ -17,10 +15,6 @@ dotenv.config();
 const fastify = Fastify({ logger: true });
 fastify.register(WebSocket);
 fastify.register(formBody);
-fastify.register(fastifyStatic, {
-  root: path.join(__dirname, '../public'),
-  prefix: '/',
-});
 
 const seniorAgent = new SeniorAgent(process.env.OPENAI_API_KEY!);
 const PORT = process.env.PORT || 3000;
@@ -36,9 +30,9 @@ fastify.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-// Root endpoint to verify server is alive
+// Root endpoint for simple status
 fastify.get('/', async (request, reply) => {
-  return reply.sendFile('index.html');
+  return { status: 'Voice Gateway Active' };
 });
 
 fastify.register(async (fastify) => {
