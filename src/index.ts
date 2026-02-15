@@ -26,12 +26,14 @@ console.log(`[Config] PUBLIC_URL: ${process.env.PUBLIC_URL}`);
 const activeSessions = new Map<string, any>();
 
 // Health check endpoint for Railway
-fastify.get('/health', async () => {
+fastify.get('/health', async (request) => {
+  console.log(`[Request] Health check received from ${request.ip}`);
   return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
 // Root endpoint for simple status
-fastify.get('/', async (request, reply) => {
+fastify.get('/', async (request) => {
+  console.log(`[Request] Root status received from ${request.ip}`);
   return { status: 'Voice Gateway Active' };
 });
 
