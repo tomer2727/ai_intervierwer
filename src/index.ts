@@ -32,7 +32,7 @@ const PORT = process.env.PORT;
 
 console.log(`[Config] Detected PORT from environment: ${process.env.PORT}`);
 console.log(`[Config] Using PORT: ${PORT}`);
-console.log(`[Config] PUBLIC_URL: ${process.env.PUBLIC_URL}`);
+console.log(`[Config] PUBLIC_URL: ${process.env.PUBLIC_URL || 'Not Set (using request headers)'}`);
 
 const activeSessions = new Map<string, any>();
 
@@ -77,7 +77,9 @@ fastify.register(async (fastify) => {
     // Ensure we don't double up on protocols if PUBLIC_URL already includes it
     const baseUrl = process.env.PUBLIC_URL ? process.env.PUBLIC_URL : `${protocol}://${host}`;
     const url = `${baseUrl.replace(/\/$/, '')}/incoming-call`;
-
+    
+    console.log(`[Twilio] Initiating call with callback URL: ${url}`);
+    
     if (!to) {
         return reply.status(400).send({ error: 'Missing "to" phone number' });
     }
