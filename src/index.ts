@@ -240,12 +240,29 @@ const broadcastToUI = (data: any) => {
     }
 };
 
+// Global error handlers to prevent silent crashes
+process.on('uncaughtException', (err) => {
+  console.error('[Fatal] Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Fatal] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const start = async () => {
   try {
     const port = Number(process.env.PORT) || 8080;
-    console.log(`[Startup] Listening on port ${port} (host: 0.0.0.0)...`);
-    const address = await fastify.listen({ port, host: '0.0.0.0' });
-    console.log(`[Startup] Server running at ${address}`);
+    const host = '0.0.0.0';
+    console.log(`[Startup] Attempting to listen on ${host}:${port}...`);
+    
+    const address = await fastify.listen({ port, host });
+    console.log(`[Startup] Server is PERSISTENT and listening at ${address}`);
+    
+    // Keep-alive log every 30 seconds to monitor stability in Railway logs
+    setInterval(() => {
+        console.log(`[KeepAlive] Server heartbeat - ${new Date().toISOString()}`);
+    }, 30000);
+
   } catch (err) {
     console.error(`[Startup] Failed to start server:`, err);
     process.exit(1);
