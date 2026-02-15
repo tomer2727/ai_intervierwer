@@ -242,9 +242,10 @@ const broadcastToUI = (data: any) => {
 
 const start = async () => {
   try {
-    console.log(`[Startup] Attempting to listen on port ${PORT} (host: 0.0.0.0)...`);
-    const address = await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });
-    console.log(`[Startup] Server successfully listening at ${address}`);
+    const port = Number(process.env.PORT) || 8080;
+    console.log(`[Startup] Listening on port ${port} (host: 0.0.0.0)...`);
+    const address = await fastify.listen({ port, host: '0.0.0.0' });
+    console.log(`[Startup] Server running at ${address}`);
   } catch (err) {
     console.error(`[Startup] Failed to start server:`, err);
     process.exit(1);
