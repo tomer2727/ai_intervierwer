@@ -50,8 +50,20 @@ fastify.get('/', async (request) => {
 fastify.register(async (fastify) => {
   // 1. TwiML Endpoint - Twilio calls this when a call comes in
   fastify.all('/incoming-call', async (request, reply) => {
-    // Return TwiML to connect the call to our WebSocket stream
-    const host = request.headers.host || 'localhost:3000'; 
+    // Determine the external hostname
+    let host = request.headers.host || 'localhost:3000';
+    
+    // If PUBLIC_URL is set, extract the hostname from it
+    if (process.env.PUBLIC_URL) {
+      try {
+        const publicUrl = new URL(process.env.PUBLIC_URL);
+        host = publicUrl.host;
+      } catch (e) {
+        console.warn('[Config] Invalid PUBLIC_URL, falling back to header host');
+      }
+    }
+
+    console.log(`[Twilio] Generating TwiML for host: ${host}`);
     const twiml = generateStreamTwiML(host);
     reply.type('text/xml').send(twiml);
   });
