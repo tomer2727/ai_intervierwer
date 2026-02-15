@@ -17,7 +17,7 @@ fastify.register(WebSocket);
 fastify.register(formBody);
 
 const seniorAgent = new SeniorAgent(process.env.OPENAI_API_KEY!);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 console.log(`[Config] Detected PORT from environment: ${process.env.PORT}`);
 console.log(`[Config] Using PORT: ${PORT}`);
