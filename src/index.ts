@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import WebSocket from '@fastify/websocket';
 import formBody from '@fastify/formbody';
+import cors from '@fastify/cors';
 import dotenv from 'dotenv';
 import { interviewMachine } from './fsm/machine';
 import { createActor } from 'xstate';
@@ -15,6 +16,16 @@ dotenv.config();
 const fastify = Fastify({ logger: true });
 fastify.register(WebSocket);
 fastify.register(formBody);
+fastify.register(cors, {
+  origin: [
+    "https://ai-interviewer-dashboard-production.up.railway.app",
+    "https://aiintervierwer-production.up.railway.app",
+    /https:\/\/.*\.up\.railway\.app$/,
+  ],
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+});
 
 const seniorAgent = new SeniorAgent(process.env.OPENAI_API_KEY!);
 const PORT = process.env.PORT;
@@ -252,6 +263,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const start = async () => {
   try {
+    
     const port = Number(process.env.PORT) || 8080;
     const host = '0.0.0.0';
     console.log(`[Startup] Attempting to listen on ${host}:${port}...`);
