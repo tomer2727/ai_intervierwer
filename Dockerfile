@@ -12,7 +12,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
 
 # Use node directly for better signal handling and reliability
 # Railway provides the PORT environment variable automatically
