@@ -6,6 +6,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
+    "postinstall": "npm run build",
     "start:cli": "ts-node src/cli.ts"
   },
   "keywords": [],

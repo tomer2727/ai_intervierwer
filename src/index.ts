@@ -26,9 +26,8 @@ console.log(`[Config] PUBLIC_URL: ${process.env.PUBLIC_URL}`);
 const activeSessions = new Map<string, any>();
 
 // Health check endpoint for Railway
-fastify.get('/health', async (request) => {
-  console.log(`[Request] Health check received from ${request.ip}`);
-  return { status: 'ok', timestamp: new Date().toISOString() };
+fastify.get('/health', async (_request, reply) => {
+  reply.code(200).send('ok');
 });
 
 // Root endpoint for simple status
